@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
 import { axiosInstance } from "../../../utils/axiosInstance";
 
-export const Login = async (value: { userName: string; password: string }) => {
+export const login = async (value: { userName: string; password: string }) => {
   try {
     const response = await axiosInstance.post<{ access_token: string }>(
       "/users/login",
@@ -18,7 +18,7 @@ export const Login = async (value: { userName: string; password: string }) => {
   }
 };
 
-export const Register = async (value: {
+export const registration = async (value: {
   userName: string;
   password: string;
 }) => {

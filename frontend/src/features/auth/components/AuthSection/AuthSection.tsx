@@ -46,7 +46,7 @@ export const AuthSection: React.FC<IAuthorizationProps> = ({
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Typography>Sign In</Typography>
-        <AuthForm login setToken={setToken} />
+        <AuthForm loginForm setToken={setToken} />
       </TabPanel>
       {token ? (
         <Button

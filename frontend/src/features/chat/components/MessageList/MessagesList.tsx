@@ -1,30 +1,25 @@
-import { Stack, Typography } from "@mui/material";
-import { yellow } from "@mui/material/colors";
-import axios from "axios";
+import { Stack } from "@mui/material";
 import { useEffect, useState } from "react";
 
 import { useAppContext } from "../../../../context/appContext";
-import { IMessagesType } from "./types";
-import { IRoomsResponse } from "../SIdeMenu/types";
-
-type Message = IMessagesType;
+import { IMessagesType, IUserStatusMessagesType } from "./types";
+import { Message } from "./Message/Message";
+import { getChatRoomByName } from "../../api/chatApi";
+import { Snack } from "../../../../shared/components/SnackBar/SnackBar";
 
 export const MessagesList = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<IMessagesType[]>([]);
+  const [userStatusMessage, setUserStatusMessage] = useState<string>("");
   const context = useAppContext();
 
   useEffect(() => {
-    const getRoomByName = async () => {
-      const response = await axios.post<IRoomsResponse>(
-        "http://localhost:5000/chat/room",
-        {
-          roomName: context?.activeChat,
-        }
-      );
-      setMessages(response.data.messages);
+    const getRoomByChatName = async () => {
+      const response = await getChatRoomByName(context?.activeChat!);
+
+      setMessages(response.messages);
     };
 
-    getRoomByName();
+    getRoomByChatName();
   }, [context, context?.activeChat]);
 
   useEffect(() => {
@@ -32,51 +27,34 @@ export const MessagesList = () => {
       setMessages((prevMessages) => [...prevMessages, message]);
     };
 
-    const handleUserStatusMessage = (message: IMessagesType) => {};
+    const handleUserStatusMessage = (message: IUserStatusMessagesType) => {
+      if (message.userName)
+        setUserStatusMessage(`${message.userName} ${message.status}`);
+    };
 
     context?.socket?.on("chatMessageNew", handleNewMessage);
     context?.socket?.on("userStatus", handleUserStatusMessage);
 
     return () => {
       context?.socket?.off("chatMessageNew", handleNewMessage);
+      context?.socket?.off("userStatus", handleUserStatusMessage);
     };
   }, [context?.socket]);
 
   return (
-    <Stack sx={{ flex: "1 1 auto", gap: "5px" }}>
-      {messages
-        ? messages.map((item, index) => (
-            <MessageCard
-              key={index}
-              message={item}
-              isAuthor={context?.user.userName === item.author}
-            />
-          ))
-        : null}
-    </Stack>
+    <>
+      <Stack sx={{ flex: "1 1 auto", gap: "5px" }}>
+        {messages
+          ? messages.map((item, index) => (
+              <Message
+                key={index}
+                message={item}
+                isAuthor={context?.user.userName === item.author}
+              />
+            ))
+          : null}
+      </Stack>
+      <Snack isOpen={Boolean(userStatusMessage)} text={userStatusMessage} />
+    </>
   );
 };
-
-const MessageCard = ({
-  message,
-  isAuthor,
-}: {
-  message: IMessagesType;
-  isAuthor: boolean;
-}) => (
-  <Stack
-    sx={{
-      padding: "10px",
-      backgroundColor: yellow[100],
-      border: "1px solid lightblue",
-      borderRadius: "10px",
-      maxWidth: "280px",
-      alignSelf: isAuthor ? "flex-end" : "auto",
-    }}
-  >
-    <Typography variant="body2" sx={{ fontSize: "12px" }}>
-      {message.author}
-    </Typography>
-    {message.message}
-  </Stack>
-);

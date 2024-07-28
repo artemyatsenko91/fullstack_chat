@@ -3,14 +3,19 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  styled,
   Typography,
 } from "@mui/material";
-import { SideMenuList } from "./SideList";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useAppContext } from "../../../../context/appContext";
-import { IChatUsersType, IRoomsResponse } from "./types";
 import { getChatRooms, getChatUsers } from "../../api/chatApi";
+import { SideMenuList } from "./SideList";
+import { IChatUsersType, IRoomsResponse } from "./types";
+
+const StyledAside = styled("aside")(() => ({
+  borderRight: "2px solid blue",
+  minHeight: "100%",
+}));
 
 export const SideMenu = () => {
   const [chatUsers, setChatUsers] = useState<IChatUsersType[]>([]);
@@ -32,13 +37,7 @@ export const SideMenu = () => {
   }, [context?.socket, context]);
 
   return (
-    <aside
-      style={{
-        borderRight: "2px solid blue",
-
-        minHeight: "100%",
-      }}
-    >
+    <StyledAside>
       <SideMenuList length={chatUsers.length} listTitle="Connected users">
         {chatUsers.map((item, index) => (
           <React.Fragment key={index}>
@@ -105,6 +104,6 @@ export const SideMenu = () => {
           </React.Fragment>
         ))}
       </SideMenuList>
-    </aside>
+    </StyledAside>
   );
 };

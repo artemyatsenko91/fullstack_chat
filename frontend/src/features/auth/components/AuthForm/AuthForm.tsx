@@ -1,14 +1,15 @@
-import { Button, Snackbar, Stack, TextField, Typography } from "@mui/material";
+import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useForm } from "@tanstack/react-form";
 import { AxiosError } from "axios";
 import React, { useState } from "react";
 
 import { useAppContext } from "../../../../context/appContext";
 import { setSocketInstance } from "../../../../utils/socket";
-import { Login, Register } from "../../api/authApi";
+import { login, registration } from "../../api/authApi";
 import { IFormProps } from "./types";
+import { Snack } from "../../../../shared/components/SnackBar/SnackBar";
 
-export const AuthForm: React.FC<IFormProps> = ({ login, setToken }) => {
+export const AuthForm: React.FC<IFormProps> = ({ loginForm, setToken }) => {
   const [error, setError] = useState<any | null>(null);
   const [open, setOpen] = React.useState(false);
 
@@ -18,17 +19,6 @@ export const AuthForm: React.FC<IFormProps> = ({ login, setToken }) => {
 
   const context = useAppContext();
 
-  const handleClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-
-    setOpen(false);
-  };
-
   const form = useForm({
     defaultValues: {
       userName: "",
@@ -36,25 +26,29 @@ export const AuthForm: React.FC<IFormProps> = ({ login, setToken }) => {
     },
     onSubmit: async ({ value }) => {
       try {
-        if (login) {
-          const { access_token } = await Login(value);
+        if (loginForm) {
+          const { access_token } = await login(value);
           localStorage.setItem("token", access_token);
           setToken && setToken(access_token);
           setSocketInstance(access_token, context?.setSocket);
           context?.setUser({ ...context.user, userName: value.userName });
+          setError("");
         } else {
-          await Register(value);
+          await registration(value);
           handleClick();
           setError("");
         }
       } catch (error) {
+        console.log(error);
         if (error instanceof AxiosError) {
-          setError(error.response?.data.message);
+          setError(error.message);
+        } else {
+           setError((error as Error).message);
         }
       }
     },
   });
-
+  console.log(error);
   return (
     <form
       onSubmit={async (e) => {
@@ -94,16 +88,11 @@ export const AuthForm: React.FC<IFormProps> = ({ login, setToken }) => {
           )}
         />
         <Button variant="contained" type="submit">
-          {login ? "Connect to chat" : "Sign up"}
+          {loginForm ? "Connect to chat" : "Sign up"}
         </Button>
         {error ? <Typography color="red">{error}</Typography> : null}
       </Stack>
-      <Snackbar
-        open={open}
-        autoHideDuration={2000}
-        onClose={handleClose}
-        message="Registration completed successfully"
-      />
+      <Snack isOpen={open} text="Registration completed successfully" />
     </form>
   );
 };
